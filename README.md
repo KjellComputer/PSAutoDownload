@@ -7,3 +7,11 @@ The first command to run is to initialize the environment: Initialize-PSAutoDown
 
 ![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/98083659-7ff5-40b1-a605-7b8206bc75dd)
 
+When creating recipes to process, the command to be run must be a string thats included in the command to create recipes. These will then be approved by another command that can be scheduled and the XML will also be signed. Only signed recipes will be processed.
+
+![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/d18474d0-e8ef-46eb-89f8-00aef4ba96ec)
+
+Downloading files found by the commands in the recipes are done with the Invoke-PSAutoDownload command.
+
+![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/3ed917bb-462f-4f0c-b51c-80fcd72e0dfd)
+
