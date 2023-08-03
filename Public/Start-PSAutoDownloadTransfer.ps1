@@ -1,68 +1,39 @@
 function Start-PSAutoDownloadTransfer
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
         [ValidateNotNullOrEmpty()]
-        [String[]]
-        $Url,
+        [System.Uri[]]
+        $Uri,
 
         [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
         [ValidateNotNullOrEmpty()]
-        [String]
-        $Destination,
-
-        [Parameter(Mandatory = $False, ValueFromPipelineByPropertyName = $True)]
-        [ValidateNotNullOrEmpty()]
-        [int]
-        $ThrottleLimit = 5
+        [System.String]
+        $OutFile
     )
     Begin
     {
-        Add-Type -AssemblyName System.Net.Http
-        $HttpClient = [System.Net.Http.HttpClient]::new()
-        $TaskManager = [System.Collections.Generic.List[Object]]::new()
 
-        function Complete-PSAutoDownloadTask
-        {
-            Param ($Download)
-
-            if ($Download.SaveTask.GetAwaiter().GetResult().NeedsDrain -eq $False)
-            {
-                $Download.SaveTask.Dispose()
-                $Download.FileStream.Dispose()
-                $TaskManager.Remove($Download) | Out-Null
-            }
-        }
     }
     Process
     {
-        foreach ($Uri in $Url)
+        foreach ( $PSDownloadUri in $Uri )
         {
-            $StreamToReadFrom = Get-HttpClientReadAsStreamAsync -Url $Uri -HttpClient $HttpClient
-
-            $SaveTask = Get-HttpClientCopyToAsync -SaveTask $StreamToReadFrom -Destination $Destination
-            $TaskManager.Add($SaveTask)
-            
-            do
+            try
             {
-                Start-Sleep -Milliseconds 250
-                $TaskManager | ForEach-Object -Process {Complete-PSAutoDownloadTask -Download $PSItem}
-
-            } while ($TaskManager.Count -gt $ThrottleLimit)
+                Invoke-WebRequest -Method Get -Uri $PSDownloadUri -OutFile $OutFile -ErrorAction Stop
+            }
+            catch
+            {
+                Write-Error -Message $_.Exception.Response
+            }
         }
     }
     End
-    {        
-        do
-        {
-            Start-Sleep -Milliseconds 250
-            $TaskManager | ForEach-Object -Process {Complete-PSAutoDownloadTask -Download $PSItem}
+    {
 
-        } until ($TaskManager.Count -eq 0)
-        
-        $HttpClient.Dispose()
     }
 }

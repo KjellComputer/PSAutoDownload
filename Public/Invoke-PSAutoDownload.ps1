@@ -5,7 +5,7 @@ function Invoke-PSAutoDownload
     Param
     (
         [Parameter(Mandatory = $False)]
-        [String]
+        [System.String]
         $Path,
 
         [Parameter(Mandatory = $False)]
@@ -16,7 +16,7 @@ function Invoke-PSAutoDownload
     {
         $PSAutoDownloadEnvironmentVariable = Get-PSAutoDownloadEnvironmentVariable
 
-        if ($PSAutoDownloadEnvironmentVariable.Recipes -and $Path.Length -eq 0)
+        if ( $PSAutoDownloadEnvironmentVariable.Recipes -and $Path.Length -eq 0 )
         {
             $Path = $PSAutoDownloadEnvironmentVariable.Recipes
         }
@@ -25,19 +25,19 @@ function Invoke-PSAutoDownload
     }
     Process
     {
-        foreach ($File in $ConfigurationFiles)
+        foreach ( $File in $ConfigurationFiles )
         {
             $XmlDocument = [System.Xml.XmlDocument]::new()
             $XmlDocument.PreserveWhitespace = $True
             $XmlDocument.Load($File.FullName)
 
-            if ([bool] $XmlDocument.GetElementsByTagName('Signature') -eq $False -and [bool] $XmlDocument.GetElementsByTagName('EncryptedData') -eq $False)
+            if ( [bool] $XmlDocument.GetElementsByTagName('Signature') -eq $False -and [bool] $XmlDocument.GetElementsByTagName('EncryptedData') -eq $False )
             {
                 Write-Warning "$($File.FullName) is not protected"
                 Break
             }
 
-            if ([bool] $XmlDocument.GetElementsByTagName('Signature') -and $Certificate)
+            if ( [bool] $XmlDocument.GetElementsByTagName('Signature') -and $Certificate )
             {
                 try
                 {
@@ -57,7 +57,7 @@ function Invoke-PSAutoDownload
                 Break
             }
 
-            if ([bool] $XmlDocument.GetElementsByTagName('EncryptedData') -and $Certificate)
+            if ( [bool] $XmlDocument.GetElementsByTagName('EncryptedData') -and $Certificate )
             {
                 try
                 {
@@ -80,7 +80,8 @@ function Invoke-PSAutoDownload
 
             if ($ValidRecipe -and $Recipe)
             {
-                $ScriptBlock = [ScriptBlock]::Create("$($Recipe.Recipe.Configuration.Command) -RecipeName $($Recipe.Recipe.Configuration.Name) -RecipeType $($Recipe.Recipe.Configuration.RecipeType)")
+                $Command = '{0} -Recipe "{1}" -Type {2}' -f $Recipe.Recipe.Configuration.Command, $Recipe.Recipe.Configuration.Name, $Recipe.Recipe.Configuration.RecipeType
+                $ScriptBlock = [ScriptBlock]::Create( $Command )
                 Invoke-Command -ScriptBlock $ScriptBlock
             }
         }
