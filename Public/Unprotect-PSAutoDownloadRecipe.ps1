@@ -1,11 +1,11 @@
 function Unprotect-PSAutoDownloadRecipe
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $True)]
-        [String]
+        [System.String]
         $Recipe
     )
     Begin
