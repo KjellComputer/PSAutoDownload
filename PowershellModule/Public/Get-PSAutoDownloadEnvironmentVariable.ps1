@@ -1,7 +1,7 @@
 function Get-PSAutoDownloadEnvironmentVariable
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Collections.Hashtable])]
     Param
     (
 
@@ -12,9 +12,13 @@ function Get-PSAutoDownloadEnvironmentVariable
     }
     Process
     {
-        if ($env:PSAutoDownload)
+        if ( $env:PSAutoDownload )
         {
-            $env:PSAutoDownload -split ';' | ForEach-Object -Process {ConvertFrom-StringData -StringData $_}
+            $env:PSAutoDownload -split ';' | ForEach-Object -Process { ConvertFrom-StringData -StringData $_ }
+        }
+        else
+        {
+            Write-Warning -Message 'No $env:PSAutoDownload available, run Initialize-PSAutoDownloadRepository first...'
         }
     }
     End

@@ -1,11 +1,11 @@
 function Get-PSAutoDownloadUri
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $True, ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True)]
-        [Alias()]
+        [Alias('InstallerUrl')]
         [System.String]
         $Url,
 
@@ -22,7 +22,6 @@ function Get-PSAutoDownloadUri
         $Architecture,
 
         [Parameter(Mandatory = $False, ValueFromPipeline = $False)]
-        #[ValidateSet('preview','alpha','beta','rc','ftp','portable')]
         [System.String[]]
         $Exclude,
 

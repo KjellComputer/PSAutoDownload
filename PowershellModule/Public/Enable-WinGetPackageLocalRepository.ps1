@@ -1,22 +1,26 @@
 function Enable-WinGetPackageLocalRepository
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $False)]
-        [String]
+        [System.String]
         $Path,
 
         [Parameter(Mandatory = $False)]
-        [String]
+        [System.String]
         $Url = 'https://github.com/microsoft/winget-pkgs.git'
     )
     Begin
     {
+
+    }
+    Process
+    {
         $PSAutoDownloadEnvironmentVariable = Get-PSAutoDownloadEnvironmentVariable
 
-        if ($PSAutoDownloadEnvironmentVariable.WinGet -and $Path.Length -eq 0)
+        if ( $PSAutoDownloadEnvironmentVariable.WinGet -and $Path.Length -eq 0 )
         {
             $Path = $PSAutoDownloadEnvironmentVariable.WinGet
         }
@@ -29,13 +33,10 @@ function Enable-WinGetPackageLocalRepository
         {
             Write-Error -Message 'Missing git executable'
         }
-    }
-    Process
-    {
-        if (Test-Path -Path $Path)
+
+        if ( Test-Path -Path $Path )
         {
-            $ArgumentList = 'clone {0} {1}' -f $Url, $Path
-            Start-Process -FilePath $Git.Source -ArgumentList $ArgumentList -NoNewWindow -Wait
+            Start-Process -FilePath $Git.Source -ArgumentList 'clone', $Url, $Path -NoNewWindow -Wait
         }
     }
     End

@@ -1,19 +1,19 @@
 function Update-WinGetPackageLocalRepository
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $False)]
-        [String]
+        [System.String]
         $Path,
 
         [Parameter(Mandatory = $False)]
-        [String]
+        [System.String]
         $Url = 'https://github.com/microsoft/winget-pkgs.git',
 
         [Parameter(Mandatory = $False)]
-        [Switch]
+        [System.Management.Automation.SwitchParameter]
         $Schedule
     )
     Begin
@@ -36,7 +36,7 @@ function Update-WinGetPackageLocalRepository
     }
     Process
     {
-        if (Test-Path -Path $Path)
+        if ( Test-Path -Path $Path )
         {
             $ArgumentList = '-C {0} pull origin master' -f $Path
             Start-Process -FilePath $Git.Source -ArgumentList $ArgumentList -NoNewWindow -Wait

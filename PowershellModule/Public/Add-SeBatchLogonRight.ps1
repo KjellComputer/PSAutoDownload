@@ -5,12 +5,12 @@ function Add-SeBatchLogonRight
     Param
     (
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
-        [String]
+        [System.String]
         $UserName,
 
         [Parameter(Mandatory = $False, ValueFromPipeline = $False)]
         [ValidateSet('LocalMachine','Domain')]
-        [String]
+        [System.String]
         $ContextType = 'LocalMachine'
     )
     Begin
@@ -19,20 +19,20 @@ function Add-SeBatchLogonRight
     }
     Process
     {
-        if ($ContextType -eq 'Domain')
+        if ( $ContextType -eq 'Domain' )
         
         {
-            $PrincipalContext = [System.DirectoryServices.AccountManagement.PrincipalContext]::new([System.DirectoryServices.AccountManagement.ContextType]::Domain)
+            $PrincipalContext = [System.DirectoryServices.AccountManagement.PrincipalContext]::new( [System.DirectoryServices.AccountManagement.ContextType]::Domain )
         }
 
         if ($ContextType -eq 'LocalMachine')
         {
-            $PrincipalContext = [System.DirectoryServices.AccountManagement.PrincipalContext]::new([System.DirectoryServices.AccountManagement.ContextType]::Machine)
+            $PrincipalContext = [System.DirectoryServices.AccountManagement.PrincipalContext]::new( [System.DirectoryServices.AccountManagement.ContextType]::Machine )
         }
         
-        $UserPrincipal = [System.DirectoryServices.AccountManagement.UserPrincipal]::FindByIdentity($PrincipalContext, $UserName)
+        $UserPrincipal = [System.DirectoryServices.AccountManagement.UserPrincipal]::FindByIdentity( $PrincipalContext, $UserName )
         
-        if ($UserPrincipal.Sid)
+        if ( $UserPrincipal.Sid )
         {
             $TempFileName = [System.IO.Path]::GetTempFileName()
             $TempFileName = $TempFileName -replace 'tmp','inf'
@@ -41,10 +41,10 @@ function Add-SeBatchLogonRight
             Start-Process -FilePath C:\Windows\system32\SecEdit.exe -ArgumentList $ArgumentList -NoNewWindow -Wait
 
             $PrivilegeRights = Get-Content -Path $TempFileName | Where-Object -FilterScript {$_ -match '='} | ConvertFrom-StringData
-            $AddToSeBatchLogonRight = $PrivilegeRights.SeBatchLogonRight.Insert($PrivilegeRights.SeBatchLogonRight.Length, ",*$($UserPrincipal.Sid.Value)")
+            $AddToSeBatchLogonRight = $PrivilegeRights.SeBatchLogonRight.Insert( $PrivilegeRights.SeBatchLogonRight.Length, ",*$($UserPrincipal.Sid.Value)" )
             $TempAddToSeBatchLogonRight = Get-Content -Path $TempFileName
-            $IndexAddToSeBatchLogonRight = [int] ($TempAddToSeBatchLogonRight | Where-Object -FilterScript {$_ -match 'SeBatchLogonRight'} | Select-Object -ExpandProperty ReadCount) - 1
-            $TempAddToSeBatchLogonRight[$IndexAddToSeBatchLogonRight] = ($TempAddToSeBatchLogonRight | Where-Object -FilterScript {$_ -match 'SeBatchLogonRight'}) -replace [regex]::Escape($PrivilegeRights.SeBatchLogonRight), [regex]::Escape($AddToSeBatchLogonRight) -replace '\\',''
+            $IndexAddToSeBatchLogonRight = [System.Int32] ($TempAddToSeBatchLogonRight | Where-Object -FilterScript {$_ -match 'SeBatchLogonRight'} | Select-Object -ExpandProperty ReadCount) - 1
+            $TempAddToSeBatchLogonRight[$IndexAddToSeBatchLogonRight] = ( $TempAddToSeBatchLogonRight | Where-Object -FilterScript {$_ -match 'SeBatchLogonRight'} ) -replace [regex]::Escape( $PrivilegeRights.SeBatchLogonRight ), [regex]::Escape( $AddToSeBatchLogonRight ) -replace '\\',''
 
             $TempAddToSeBatchLogonRight | Out-File -FilePath $TempFileName -Encoding unicode
 

@@ -1,23 +1,27 @@
 function Find-WinGetPackage
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
-        [String[]]
+        [System.String[]]
         $Name,
 
         [Parameter(Mandatory = $False)]
-        [String]
+        [System.String]
         $Path,
 
         [Parameter(Mandatory = $False)]
         [ValidateRange(1, 99)]
-        [Int]
+        [System.Byte]
         $Latest
     )
     Begin
+    {
+
+    }
+    Process
     {
         try
         {
@@ -25,7 +29,7 @@ function Find-WinGetPackage
         }
         catch 
         {
-            Write-Error -Message 'Missing module powershell-yaml'    
+            Write-Error -Message 'Missing module powershell-yaml'
         }
 
         $PSAutoDownloadEnvironmentVariable = Get-PSAutoDownloadEnvironmentVariable
@@ -34,51 +38,44 @@ function Find-WinGetPackage
         {
             $Path = $PSAutoDownloadEnvironmentVariable.WinGet
         }
-    }
-    Process
-    {
-        foreach ($Package in $Name)
+
+        foreach ( $Package in $Name )
         {
-            if ($Latest)
+            if ( $Latest )
             {
-                #$PSAutoPackage = Get-ChildItem -Path $Path -Recurse -Directory -Filter $Package | Get-ChildItem -Directory | Sort-Object -Property {$_.Name -as [System.Version]} -Descending | Select-Object -First $Latest
-                #Go speed go
-                $PSAutoPackage = [System.IO.Directory]::EnumerateDirectories($Path, $Package, [System.IO.SearchOption]::AllDirectories)
-                $PSAutoPackage = $PSAutoPackage | Get-ChildItem -Directory | Sort-Object -Property {$_.Name -as [System.Version]} -Descending | Select-Object -First $Latest
-                #$PSAutoPackage = [System.IO.Directory]::EnumerateDirectories($PSAutoPackage) | Sort-Object -Property {$_.Name -as [System.Version]} -Descending | Select-Object -First $Latest
+                $PSAutoPackage = [System.IO.Directory]::EnumerateDirectories( $Path, $Package, [System.IO.SearchOption]::AllDirectories )
+                $PSAutoPackage = $PSAutoPackage | Get-ChildItem -Directory | Sort-Object -Property { $_.Name -as [System.Version] } -Descending | Select-Object -First $Latest
             }
             else 
             {
-                #$PSAutoPackage = Get-ChildItem -Path $Path -Recurse -Directory -Filter $Package | Get-ChildItem -Directory
-                #Go speed go
-                $PSAutoPackage = [System.IO.Directory]::EnumerateDirectories($Path, $Package, [System.IO.SearchOption]::AllDirectories)
+                $PSAutoPackage = [System.IO.Directory]::EnumerateDirectories( $Path, $Package, [System.IO.SearchOption]::AllDirectories )
                 $PSAutoPackage =  $PSAutoPackage | Get-ChildItem -Directory
             }
             
-            if ($PSAutoPackage)
+            if ( $PSAutoPackage )
             {
-                $YamlInstallerFiles = $PSAutoPackage | Get-ChildItem -Recurse -Filter '*.installer.yaml'# | Select-Object -Unique
+                $YamlInstallerFiles = $PSAutoPackage | Get-ChildItem -Recurse -Filter '*.installer.yaml'
 
                 if (-not($YamlInstallerFiles))
                 {
-                    $YamlInstallerFiles = $PSAutoPackage | Get-ChildItem -Recurse -Filter '*.yaml'#| Select-Object -Unique
+                    $YamlInstallerFiles = $PSAutoPackage | Get-ChildItem -Recurse -Filter '*.yaml'
                 }
 
-                foreach ($Yaml in $YamlInstallerFiles)
+                foreach ( $Yaml in $YamlInstallerFiles )
                 {
-                    $PSAutoPackageInformation = [PSCustomObject]($Yaml | Get-Content | ConvertFrom-Yaml)
+                    $PSAutoPackageInformation = [PSCustomObject] ( $Yaml | Get-Content | ConvertFrom-Yaml )
                     
-                    $PSAutoPackageInstallers = $PSAutoPackageInformation.Installers | ForEach-Object -Process {[PSCustomObject]$_}
+                    $PSAutoPackageInstallers = $PSAutoPackageInformation.Installers | ForEach-Object -Process { [PSCustomObject] $_ }
                     
-                    foreach ($PSAutoPackageInstaller in $PSAutoPackageInstallers)
+                    foreach ( $PSAutoPackageInstaller in $PSAutoPackageInstallers )
                     {
-                        if ($PSAutoPackageInformation.InstallerType)
+                        if ( $PSAutoPackageInformation.InstallerType )
                         {
-                            $InstallerType = $PSAutoPackageInformation.InstallerType    
+                            $InstallerType = $PSAutoPackageInformation.InstallerType
                         }
                         else
                         {
-                            $InstallerType = $PSAutoPackageInstaller.InstallerType    
+                            $InstallerType = $PSAutoPackageInstaller.InstallerType
                         }
 
                         [PSCustomObject]@{
@@ -96,6 +93,6 @@ function Find-WinGetPackage
     }
     End
     {
-        
+
     }
 }

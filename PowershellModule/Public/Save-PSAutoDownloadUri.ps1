@@ -5,10 +5,10 @@ function Save-PSAutoDownloadUri
     Param
     (
         [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
-        [System.Uri[]]
+        [System.Uri]
         $Uri,
 
-        [Parameter(Mandatory = $False, ValueFromPipelineByPropertyName = $True)]
+        [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
         [System.String]
         $OutFile,
 
@@ -22,6 +22,10 @@ function Save-PSAutoDownloadUri
 
         [Parameter(Mandatory = $False)]
         [System.Management.Automation.SwitchParameter]
+        $Skip = $False,
+
+        [Parameter(Mandatory = $False)]
+        [System.Management.Automation.SwitchParameter]
         $TryParseSoftwareVersioning = $False
     )
     Begin
@@ -32,106 +36,105 @@ function Save-PSAutoDownloadUri
     {
         $PSAutoDownloadEnvironmentVariable = Get-PSAutoDownloadEnvironmentVariable
 
-        foreach ( $PSDownloadUri in $Uri )
+        switch ( $Type )
         {
-            switch ( $Type )
+            'Application'
             {
-                'Application'
-                {
-                    $Path = $PSAutoDownloadEnvironmentVariable.Applications
-                }
-            
-                'PowershellGallery'
-                {
-                    $Path = $PSAutoDownloadEnvironmentVariable.PSModules
-                    $Nuget = $True
-                }
+                $Path = $PSAutoDownloadEnvironmentVariable.Applications
             }
-            
-            $Destination = Join-Path -Path $Path -ChildPath $Recipe.Substring(0,1)
-            $Destination = Join-Path -Path $Destination -ChildPath $Recipe
-
-            if ( -not ( Test-Path -LiteralPath $Destination ) )
+        
+            'PowershellGallery'
             {
-                New-Item -Type Directory -Path $Destination
+                $Path = $PSAutoDownloadEnvironmentVariable.PSModules
+                $Nuget = $True
             }
+        }
+        
+        $Destination = Join-Path -Path $Path -ChildPath $Recipe.Substring(0,1)
+        $Destination = Join-Path -Path $Destination -ChildPath $Recipe
 
-            $OutFile = Join-Path -Path $Destination -ChildPath $OutFile
+        if ( -not ( Test-Path -LiteralPath $Destination ) )
+        {
+            New-Item -Type Directory -Path $Destination
+        }
 
-            if ( Test-Path -LiteralPath $OutFile )
+        $OutFile = Join-Path -Path $Destination -ChildPath $OutFile
+
+        if ( Test-Path -LiteralPath $OutFile )
+        {
+            if ( $Skip -eq $False )
             {
                 $ReferenceFileHash = Get-FileHash -Path $OutFile -Algorithm SHA256
                 $OutFile = $OutFile.Replace( [System.IO.Path]::GetExtension( $OutFile ), [System.IO.Path]::GetExtension( $OutFile ).Insert( 0 , '-psautodownload' ) )
 
                 $VerifyFileHash = $True
+                Write-Information -MessageData "Existing $OutFile, verifying file hash..." -InformationAction Continue
             }
-
-            if ( $TryParseSoftwareVersioning )
+            else
             {
-                $OutFile = $OutFile.Replace( [System.IO.Path]::GetExtension( $OutFile ), [System.IO.Path]::GetExtension( $OutFile ).Insert( 0 , '-psautodownload' ) )
+                Continue
             }
+        }
 
-            Start-PSAutoDownloadTransfer -Uri $PSDownloadUri -OutFile $OutFile
+        Start-PSAutoDownloadTransfer -Uri $Uri -OutFile $OutFile
 
-            if ( $VerifyFileHash -eq $True )
+        if ( $VerifyFileHash -eq $True )
+        {
+            $DifferenceFileHash = Get-FileHash -Path $OutFile -Algorithm SHA256
+
+            if ( $ReferenceFileHash.Hash -eq $DifferenceFileHash.Hash )
             {
-                $DifferenceFileHash = Get-FileHash -Path $OutFile -Algorithm SHA256
-
-                if ( $ReferenceFileHash.Hash -eq $DifferenceFileHash.Hash )
-                {
-                    Remove-Item -LiteralPath $OutFile
-                }
-                else
-                {
-                    $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( 'psautodownload', (Get-Date).ToString('yyyy-MM-dd') )
-                }
+                Remove-Item -LiteralPath $OutFile
+                Write-Information -MessageData "$OutFile removed..." -InformationAction Continue
             }
-                
-            if ( $TryParseSoftwareVersioning )
+            else
             {
                 $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( 'psautodownload', (Get-Date).ToString('yyyy-MM-dd') )
-
-                switch ( [System.IO.Path]::GetExtension( $OutFile ) )
+            }
+        }
+            
+        if ( $TryParseSoftwareVersioning )
+        {
+            switch ( [System.IO.Path]::GetExtension( $OutFile ) )
+            {
+                '.exe'
                 {
-                    '.exe'
+                    try
                     {
-                        try
+                        $VersionInfo = Get-Item -LiteralPath $OutFile | Select-Object -Property VersionInfo
+                        
+                        if ( $VersionInfo.VersionInfo.FileVersion )
                         {
-                            $VersionInfo = Get-Item -LiteralPath $OutFile | Select-Object -Property VersionInfo
-                            
-                            if ( $VersionInfo.VersionInfo.FileVersion )
-                            {
-                                $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( 'psautodownload', $VersionInfo.VersionInfo.FileVersion )
-                            }
-                        }
-                        catch
-                        {
-                            Write-Information -MessageData "Parsing fileversion failed, defaulting to date scheme..." -InformationAction Continue
+                            $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( 'psautodownload', $VersionInfo.VersionInfo.FileVersion )
                         }
                     }
-                    '.msi'
+                    catch
                     {
-                        try
-                        {
-                            $FileVersion = Get-MsiFileVersion -FilePath $OutFile
+                        Write-Information -MessageData "Parsing fileversion failed, defaulting to date scheme..." -InformationAction Continue
+                    }
+                }
+                '.msi'
+                {
+                    try
+                    {
+                        $FileVersion = Get-MsiFileVersion -FilePath $OutFile
 
-                            if ( $FileVersion )
-                            {
-                                $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( 'psautodownload', $FileVersion )
-                            }
-                        }
-                        catch
+                        if ( $FileVersion )
                         {
-                            Write-Information -MessageData "Parsing fileversion failed, defaulting to date scheme..." -InformationAction Continue
+                            $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( [System.IO.Path]::GetExtension( $OutFile ), [System.IO.Path]::GetExtension( $OutFile ).Insert( 0 , "-$($FileVersion)" ) )
                         }
+                    }
+                    catch
+                    {
+                        Write-Information -MessageData "Parsing fileversion failed, defaulting to date scheme..." -InformationAction Continue
                     }
                 }
             }
-                
-            if ( Test-Path -LiteralPath $OutFile )
-            {
-                Rename-Item -LiteralPath $OutFile -NewName $NewName
-            }
+        }
+
+        if ( Test-Path -LiteralPath $OutFile )
+        {
+            Rename-Item -LiteralPath $OutFile -NewName $NewName
         }
     }
     End
