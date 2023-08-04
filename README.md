@@ -1,4 +1,4 @@
-# PSAutoDownload
+# PSAutoDownload #Just notes for now and short examples
 
 PSAutoDownload is a module that stores runable code in signed XML-files and processes them for the purpose of maintaining a local repository of software files.
 The solution consists of small helper functions that will find the right url for downloading software, identifying the name of the file to download, and parse the downloaded files to identify potential file versions.
@@ -15,3 +15,6 @@ Downloading files found by the commands in the recipes are done with the Invoke-
 
 ![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/3ed917bb-462f-4f0c-b51c-80fcd72e0dfd)
 
+Using Winget and parsing the yaml-files from the community repository it's possible to use Get-PSAutoDownloadUri to filter out spesific versions of software, example to maintain a local repository of Powershell 7 versions:
+
+![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/2c30f3f0-e3e4-49fe-8a6c-920215abd182)
