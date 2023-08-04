@@ -18,3 +18,6 @@ Downloading files found by the commands in the recipes are done with the Invoke-
 Using Winget and parsing the yaml-files from the community repository it's possible to use Get-PSAutoDownloadUri to filter out spesific versions of software, example to maintain a local repository of Powershell 7 versions:
 
 ![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/2c30f3f0-e3e4-49fe-8a6c-920215abd182)
+
+![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/23e5c7b3-4869-4003-8a9a-557ca2bf23ec)
+
