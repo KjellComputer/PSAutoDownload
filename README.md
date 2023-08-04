@@ -21,4 +21,5 @@ Using Winget and parsing the yaml-files from the community repository it's possi
 
 ![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/3d741d46-672e-46ce-943c-d8443e5fa880)
 
+![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/b8055a20-5dfc-4e6f-aae0-9b2a95f9aca5)
 
