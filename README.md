@@ -1,6 +1,13 @@
 # PSAutoDownload #Just notes for now and short examples
 
-PSAutoDownload is a module that stores runable code in signed XML-files and processes them for the purpose of maintaining a local repository of software files.
+PSAutoDownload is a module that stores runable code in XML-files and processes them for the purpose of maintaining a local repository of software files.
+Using XML functionality like encryping XML content and signing the XML with certificates, data tampering of code stored in the XML files should be safe as long as the certificate is protected.
+The XML signature is validated against the certificate before continuing to decrypt the content of the XML file with the same certificate or another for extra measurement.
+
+The code can be *custom, but the solution is also build to find the right urls for software and download them as a local repository.
+
+*Tweak Invoke-PSAutoDownload to enable this
+
 The solution consists of small helper functions that will find the right url for downloading software, identifying the name of the file to download, and parse the downloaded files to identify potential file versions.
 
 The first command to run is to initialize the environment: Initialize-PSAutoDownloadRepository -Path C:\Demo\
