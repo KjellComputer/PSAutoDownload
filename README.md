@@ -23,3 +23,6 @@ Using Winget and parsing the yaml-files from the community repository it's possi
 
 ![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/b8055a20-5dfc-4e6f-aae0-9b2a95f9aca5)
 
+It's also possible to follow redirected url where the command will follow until it find a url with an extension, this can be slow depending on how many url it prosesses if one only want to download for example msi files:
+
+![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/1b7ea97b-041f-468d-949d-f870682b2d0a)
