@@ -26,3 +26,7 @@ Using Winget and parsing the yaml-files from the community repository it's possi
 It's also possible to follow redirected url where the command will follow until it find a url with an extension, this can be slow depending on how many url it prosesses if one only want to download for example msi files:
 
 ![bilde](https://github.com/KjellComputer/PSAutoDownload/assets/108197286/1b7ea97b-041f-468d-949d-f870682b2d0a)
+
+In the case of WinSCP, we know or assume that the outfile will follow schemantic versioning, so to save bandwith one can use the -Skip parameter to not download the files again:
+
+$Command = 'Find-WinGetPackage -Name WinSCP -Latest 1 | Get-PSAutoDownloadUri -RedirectUrl -Extension msi | Save-PSAutoDownloadUri -Skip'
