@@ -18,9 +18,13 @@ function Update-WinGetPackageLocalRepository
     )
     Begin
     {
+
+    }
+    Process
+    {
         $PSAutoDownloadEnvironmentVariable = Get-PSAutoDownloadEnvironmentVariable
 
-        if ($PSAutoDownloadEnvironmentVariable.WinGet -and $Path.Length -eq 0)
+        if ( $PSAutoDownloadEnvironmentVariable.WinGet -and $Path.Length -eq 0 )
         {
             $Path = $PSAutoDownloadEnvironmentVariable.WinGet
         }
@@ -33,9 +37,7 @@ function Update-WinGetPackageLocalRepository
         {
             Write-Error -Message 'Missing git executable'
         }
-    }
-    Process
-    {
+
         if ( Test-Path -Path $Path )
         {
             $ArgumentList = '-C {0} pull origin master' -f $Path
@@ -48,7 +50,7 @@ function Update-WinGetPackageLocalRepository
             $Credential = Get-Credential -Message 'Service Account for PSAutoDownload'            
             
             $ScheduledTaskAction = New-ScheduledTaskAction -Execute 'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -Command "Import-Module -Name PSAutoDownload; Update-WinGetPackageLocalRepository"'
-            $ScheduledTaskTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 30)
+            $ScheduledTaskTrigger = New-ScheduledTaskTrigger -Once -At ( Get-Date ) -RepetitionInterval ( New-TimeSpan -Minutes 30 )
             Register-ScheduledTask -TaskName 'Update-WinGetPackageLocalRepository' -Action $ScheduledTaskAction -Trigger $ScheduledTaskTrigger -User $Credential.UserName -Password $Credential.GetNetworkCredential().Password
         }
     }

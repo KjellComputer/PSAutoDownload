@@ -1,55 +1,51 @@
 function Approve-PSAutoDownloadRecipe
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $False, ValueFromPipeline = $True)]
-        [String]
+        [System.String]
         $Path,
 
         [Parameter(Mandatory = $False)]
         [System.Security.Cryptography.X509Certificates.X509Certificate2]
-        $Certificate = (Get-ChildItem Cert:\ -Recurse | Where-Object -Property FriendlyName -eq PSAutoDownload)
+        $Certificate = ( Get-ChildItem Cert:\ -Recurse | Where-Object -Property FriendlyName -eq PSAutoDownload )
     )
     Begin
     {
         Add-Type -AssemblyName System.Security
-        
-        $PSAutoDownloadEnvironmentVariable = Get-PSAutoDownloadEnvironmentVariable
-
-        if ($PSAutoDownloadEnvironmentVariable.Approval -and $Path.Length -eq 0)
-        {
-            $Path = $PSAutoDownloadEnvironmentVariable.Approval
-        }
     }
     Process
     {
-        foreach ($Recipe in (Get-ChildItem -LiteralPath $Path -Filter '*.xml'))
+                
+        $PSAutoDownloadEnvironmentVariable = Get-PSAutoDownloadEnvironmentVariable
+
+        if ( $PSAutoDownloadEnvironmentVariable.Approval -and $Path.Length -eq 0 )
         {
-            if (Test-Path -LiteralPath ('{0}\Processed\{1}' -f $Recipe.Directory.Parent.FullName, $Recipe.Name))
+            $Path = $PSAutoDownloadEnvironmentVariable.Approval
+        }
+
+        foreach ( $Recipe in ( Get-ChildItem -LiteralPath $Path -Filter '*.xml' ) )
+        {
+            $ProcessedRecipe = Join-Path -Path $Recipe.Directory.Parent.FullName -ChildPath Processed -AdditionalChildPath $Recipe.Name
+            
+            if ( Test-Path -LiteralPath $ProcessedRecipe )
             {
-                $Recipe | Move-Item -Destination ('{0}\Discarded\{1}{2}' -f $Recipe.Directory.Parent.FullName, (Get-Date).ToString('yyyy-MM-dd-HHmm-'), $Recipe.Name)
+                $DiscardedRecipe = Join-Path $Recipe.Directory.Parent.FullName -ChildPath Discarded -AdditionalChildPath ( (Get-Date).ToString( 'yyyy-MM-dd-HHmm' ), $Recipe.Name -join '-' )
+                
+                $Recipe | Move-Item -Destination $DiscardedRecipe
                 Write-Verbose -Message "$($Recipe.FullName) was discaded because another recipe is active with same name."
             }
             else
             {
-                try
-                {
-                    #$Recipe
-                    $SignedXmlFile = $Recipe.Name
-                    $SignedXmlFile = '{0}\Recipes\{1}' -f $Recipe.Directory.Parent.FullName, $SignedXmlFile.Insert($SignedXmlFile.IndexOf($Recipe.Extension),'_Signed')
-                }
-                catch
-                {
-                    Write-Error "Could not load $Recipe" -ErrorAction Stop
-                }
+                $SignedXmlFile = Join-Path -Path $Recipe.Directory.Parent.FullName -ChildPath Recipes -AdditionalChildPath ( $Recipe.Name ).Insert( ($Recipe.Name ).IndexOf( $Recipe.Extension ),'_Signed' )
 
                 $XmlDocument = [System.Xml.XmlDocument]::new()
                 $XmlDocument.PreserveWhitespace = $True
-                $XmlDocument.Load($Recipe.FullName)
+                $XmlDocument.Load( $Recipe.FullName )
                 
-                $SignedXmlDocument = [System.Security.Cryptography.Xml.SignedXml]::new($XmlDocument)
+                $SignedXmlDocument = [System.Security.Cryptography.Xml.SignedXml]::new( $XmlDocument )
                 $SignedXmlDocument.SigningKey = $Certificate.PrivateKey
                 
                 $Reference = [System.Security.Cryptography.Xml.Reference]::new()
@@ -57,19 +53,20 @@ function Approve-PSAutoDownloadRecipe
                 
                 $XmlDsigEnvelopedSignatureTransform = [System.Security.Cryptography.Xml.XmlDsigEnvelopedSignatureTransform]::new()
                 
-                $Reference.AddTransform($XmlDsigEnvelopedSignatureTransform)
+                $Reference.AddTransform( $XmlDsigEnvelopedSignatureTransform )
                 
-                $SignedXmlDocument.AddReference($Reference)
+                $SignedXmlDocument.AddReference( $Reference )
                 
                 $SignedXmlDocument.ComputeSignature()
                 
                 $XmlDigitalSignature = $SignedXmlDocument.GetXml()
                 
-                $XmlDocument.DocumentElement.AppendChild($XmlDocument.ImportNode($XmlDigitalSignature, $True))
+                $XmlDocument.DocumentElement.AppendChild( $XmlDocument.ImportNode( $XmlDigitalSignature, $True ) )
                 
-                $XmlDocument.Save($SignedXmlFile)
+                $XmlDocument.Save( $SignedXmlFile )
 
-                $Recipe | Move-Item -Destination ('{0}\Processed\' -f $Recipe.Directory.Parent.FullName)
+                $MoveProcessedRecipe = Join-Path -Path $Recipe.Directory.Parent.FullName -ChildPath Processed
+                $Recipe | Move-Item -Destination $MoveProcessedRecipe
             }
         }
     }
