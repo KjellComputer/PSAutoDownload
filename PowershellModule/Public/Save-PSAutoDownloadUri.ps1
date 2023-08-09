@@ -65,7 +65,7 @@ function Save-PSAutoDownloadUri
             if ( $Skip -eq $False )
             {
                 $ReferenceFileHash = Get-FileHash -Path $OutFile -Algorithm SHA256
-                $OutFile = $OutFile.Replace( [System.IO.Path]::GetExtension( $OutFile ), [System.IO.Path]::GetExtension( $OutFile ).Insert( 0 , '-psautodownload' ) )
+                $OutFile = $OutFile.Replace( [System.IO.Path]::GetExtension( $OutFile ), [System.IO.Path]::GetExtension( $OutFile ).Insert( 0 , '_psautodownload' ) )
 
                 $VerifyFileHash = $True
                 Write-Information -MessageData "Existing $OutFile, verifying file hash..." -InformationAction Continue
@@ -127,7 +127,7 @@ function Save-PSAutoDownloadUri
 
                         if ( $FileVersion )
                         {
-                            $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( [System.IO.Path]::GetExtension( $OutFile ), [System.IO.Path]::GetExtension( $OutFile ).Insert( 0 , "-$($FileVersion)" ) )
+                            $NewName = [System.IO.Path]::GetFileName( $OutFile ).Replace( [System.IO.Path]::GetExtension( $OutFile ), [System.IO.Path]::GetExtension( $OutFile ).Insert( 0 , "_$($FileVersion)" ) )
                         }
                     }
                     catch
@@ -138,6 +138,10 @@ function Save-PSAutoDownloadUri
             }
         }
 
+        # We have already saved the file, but if we want to rename it this is the chance
+        # This is valid if using Save-PSAutoDownload -TryParseSoftwareVersioning or not using the -Skip parameter
+        # Validating the hash earlier will remove $OutFile to be $True with Test-Path if hash is the same
+        # If the $NewName exists in the Path, this can happen when trying to parse the software version, $OutFile will be deleted (duplicate handling)
         if ( ( Test-Path -LiteralPath $OutFile ) -and $NewName )
         {
             if ( Get-ChildItem -LiteralPath (Get-Item -LiteralPath $OutFile).Directory -Filter $NewName | Test-Path )

@@ -5,7 +5,7 @@ function Get-PSAutoDownloadUri
     Param
     (
         [Parameter(Mandatory = $True, ValueFromPipeline = $True, ValueFromPipelineByPropertyName = $True)]
-        [Alias('InstallerUrl')]
+        [Alias('InstallerUrl', 'AbsoluteUri')]
         [System.String]
         $Url,
 
@@ -64,7 +64,7 @@ function Get-PSAutoDownloadUri
         {
             $Uris = Get-PSAutoDownloadHypertextReferenceUri -Url $Url
 
-            if ( $Uris[0] -is [System.Uri] )
+            if ( $Uris -is [System.Array] -or $Uris -eq [System.Uri] )
             {
                 $Uris = $Uris.Where( { $_.AbsoluteUri -match $SoftwareVersioning -and $_.AbsoluteUri -match $Extensions -and $_.AbsoluteUri -match $Architectures } )
 

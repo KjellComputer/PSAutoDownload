@@ -7,7 +7,11 @@ function Get-PSAutoDownloadRedirectUri
         [Parameter(Mandatory = $True, ValueFromPipeline = $True)]
         [ValidateNotNullOrEmpty()]
         [System.String[]]
-        $Url
+        $Url,
+
+        [Parameter(Mandatory = $False, ValueFromPipeline = $False)]
+        [System.Management.Automation.SwitchParameter]
+        $ShowAllRedirects
     )
     Begin
     {
@@ -35,6 +39,10 @@ function Get-PSAutoDownloadRedirectUri
                     Break
                 }
 
+                if ( $ShowAllRedirects )
+                {
+                    $Response.RequestMessage.RequestUri.AbsoluteUri
+                }
                 #Continue loop until the url matches itself
                 if ( $Response.RequestMessage.RequestUri.AbsoluteUri -ne $Uri )
                 {

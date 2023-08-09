@@ -1,7 +1,7 @@
 function Invoke-PSAutoDownload
 {
     [CmdletBinding()]
-    [OutputType([PSObject])]
+    [OutputType([System.Management.Automation.PSObject])]
     Param
     (
         [Parameter(Mandatory = $False)]
@@ -31,13 +31,13 @@ function Invoke-PSAutoDownload
             $XmlDocument.PreserveWhitespace = $True
             $XmlDocument.Load($File.FullName)
 
-            if ( [bool] $XmlDocument.GetElementsByTagName('Signature') -eq $False -and [bool] $XmlDocument.GetElementsByTagName('EncryptedData') -eq $False )
+            if ( [System.Boolean] $XmlDocument.GetElementsByTagName( 'Signature' ) -eq $False -and [System.Boolean] $XmlDocument.GetElementsByTagName( 'EncryptedData' ) -eq $False )
             {
                 Write-Warning "$($File.FullName) is not protected"
                 Break
             }
 
-            if ( [bool] $XmlDocument.GetElementsByTagName('Signature') -and $Certificate )
+            if ( [System.Boolean] $XmlDocument.GetElementsByTagName( 'Signature' ) -and $Certificate )
             {
                 try
                 {
@@ -57,7 +57,7 @@ function Invoke-PSAutoDownload
                 Break
             }
 
-            if ( [bool] $XmlDocument.GetElementsByTagName('EncryptedData') -and $Certificate )
+            if ( [System.Boolean] $XmlDocument.GetElementsByTagName( 'EncryptedData' ) -and $Certificate )
             {
                 try
                 {
@@ -78,7 +78,7 @@ function Invoke-PSAutoDownload
                 Break
             }
 
-            if ($ValidRecipe -and $Recipe)
+            if ( $ValidRecipe -and $Recipe )
             {
                 $Command = '{0} -Recipe "{1}" -Type {2}' -f $Recipe.Recipe.Configuration.Command, $Recipe.Recipe.Configuration.Name, $Recipe.Recipe.Configuration.RecipeType
                 $ScriptBlock = [ScriptBlock]::Create( $Command )
